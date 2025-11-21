@@ -9,3 +9,8 @@ scikit-fuzzy
 scipy
 packaging
 networkx
+Pillow
+scikit-learn
+scikit-image
+matplotlib
+seaborn
