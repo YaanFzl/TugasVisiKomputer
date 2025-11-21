@@ -17,8 +17,8 @@ app.add_middleware(
 )
 
 # Include Routers
-app.include_router(glcm.router)
-app.include_router(knn.router)
+app.include_router(glcm.router, prefix="/api")
+app.include_router(knn.router, prefix="/api")
 app.include_router(naive_bayes.router, prefix="/api")
 
 # API Routes (Placeholder)

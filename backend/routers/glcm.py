@@ -7,7 +7,7 @@ from skimage.feature import graycomatrix, graycoprops
 from skimage import color
 import base64
 
-router = APIRouter(prefix="/api/glcm", tags=["glcm"])
+router = APIRouter(prefix="/glcm", tags=["glcm"])
 
 @router.post("/analyze")
 async def analyze_glcm(

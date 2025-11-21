@@ -10,7 +10,7 @@ import io
 import pickle
 import json
 
-router = APIRouter(prefix="/api/knn", tags=["knn"])
+router = APIRouter(prefix="/knn", tags=["knn"])
 
 # In-memory storage for the model (for simplicity in this session)
 # In a real app, use a database or file storage
