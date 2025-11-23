@@ -48,6 +48,56 @@ const GLCM = () => {
                     Analisis Tekstur GLCM
                 </h2>
 
+                {/* GLCM Explanation Panel */}
+                <div className="mb-6 glass-panel p-6 bg-purple-500/5 border-purple-400/20">
+                    <h3 className="text-lg font-semibold text-white mb-3 flex items-center gap-2">
+                        🔍 Apa itu GLCM?
+                    </h3>
+                    <div className="space-y-3 text-sm text-gray-300">
+                        <p>
+                            <strong className="text-[#00ff88]">Gray-Level Co-occurrence Matrix (GLCM)</strong> adalah metode statistik
+                            untuk menganalisis tekstur gambar dengan menghitung seberapa sering pasangan piksel dengan nilai intensitas tertentu
+                            muncul bersamaan pada jarak dan arah tertentu.
+                        </p>
+
+                        <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <p className="font-semibold text-white mb-2">Fitur Tekstur:</p>
+                                <ul className="space-y-2 text-xs text-gray-400">
+                                    <li>
+                                        <strong className="text-blue-400">Contrast:</strong> Mengukur perbedaan intensitas antara piksel tetangga.
+                                        Nilai tinggi = tekstur kasar/kontras tinggi.
+                                    </li>
+                                    <li>
+                                        <strong className="text-blue-400">Dissimilarity:</strong> Mirip contrast, tapi meningkat secara linear.
+                                        Mengukur ketidaksamaan lokal.
+                                    </li>
+                                    <li>
+                                        <strong className="text-blue-400">Homogeneity:</strong> Mengukur kedekatan distribusi elemen ke diagonal GLCM.
+                                        Nilai tinggi = tekstur halus/seragam.
+                                    </li>
+                                </ul>
+                            </div>
+                            <div>
+                                <ul className="space-y-2 text-xs text-gray-400 mt-6 md:mt-0">
+                                    <li>
+                                        <strong className="text-pink-400">Energy:</strong> Mengukur keseragaman tekstur (orderliness).
+                                        Nilai tinggi = pola sangat teratur/konstan.
+                                    </li>
+                                    <li>
+                                        <strong className="text-pink-400">Correlation:</strong> Mengukur ketergantungan linear nilai abu-abu.
+                                        Menunjukkan pola berulang atau struktur linear.
+                                    </li>
+                                    <li>
+                                        <strong className="text-pink-400">ASM:</strong> Angular Second Moment. Ukuran keseragaman tekstur
+                                        (kuadrat dari Energy).
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                     <div className="space-y-6">
                         <div className="border-2 border-dashed border-white/20 rounded-xl p-8 text-center hover:border-[#00ff88] transition-colors relative">
