@@ -109,7 +109,7 @@ function App() {
                 >
                     <div className="cursor-pointer" onClick={() => setActiveModule('home')}>
                         <h1 className="text-5xl font-bold mb-2 text-transparent bg-clip-text bg-gradient-to-r from-white to-gray-400 tracking-tighter">
-                            VISKOM<span className="text-[#00ff88]">.AI</span>
+                            VISKOM<span className="text-[#00ff88]">.VK</span>
                         </h1>
                         <p className="text-gray-400 font-mono text-sm">Visi Komputer & Pembelajaran Mesin Lanjutan</p>
                     </div>

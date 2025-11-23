@@ -119,7 +119,7 @@ const SplashScreen = ({ onComplete }) => {
                                     <span className="text-transparent bg-clip-text bg-gradient-to-r from-white via-[#00ff88] to-white">
                                         VISKOM
                                     </span>
-                                    <span className="text-[#00ff88]">.AI</span>
+                                    <span className="text-[#00ff88]">.VK</span>
                                 </motion.h1>
 
                                 <motion.p
