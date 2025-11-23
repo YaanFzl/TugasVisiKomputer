@@ -1,6 +1,6 @@
 import React from 'react'
 import { motion } from 'framer-motion'
-import { LayoutGrid, BrainCircuit, ArrowRight, Cpu, Zap } from 'lucide-react'
+import { LayoutGrid, BrainCircuit, ArrowRight, Cpu, Zap, TreeDeciduous, Network } from 'lucide-react'
 
 const Landing = ({ onNavigate }) => {
     const container = {
@@ -48,7 +48,7 @@ const Landing = ({ onNavigate }) => {
 
 
                 {/* Feature Cards */}
-                <motion.div variants={item} className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-7xl mx-auto">
+                <motion.div variants={item} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 max-w-7xl mx-auto">
                     <div
                         onClick={() => onNavigate('glcm')}
                         className="group relative p-8 rounded-2xl bg-white/5 border border-white/10 hover:border-[#00ff88]/50 transition-all cursor-pointer overflow-hidden"
@@ -65,16 +65,14 @@ const Landing = ({ onNavigate }) => {
                                     Analisis GLCM
                                     <ArrowRight className="opacity-0 -translate-x-2 group-hover:opacity-100 group-hover:translate-x-0 transition-all text-[#00ff88]" size={20} />
                                 </h3>
-                                <p className="text-gray-400">
+                                <p className="text-gray-400 text-sm">
                                     Ekstraksi fitur tekstur dari gambar menggunakan Gray-Level Co-occurrence Matrices.
-                                    Analisis kontras, korelasi, dan homogenitas.
                                 </p>
                             </div>
 
-                            <div className="pt-4 flex gap-2">
-                                <span className="text-xs font-mono px-2 py-1 rounded bg-white/5 text-gray-400">Tekstur</span>
-                                <span className="text-xs font-mono px-2 py-1 rounded bg-white/5 text-gray-400">Fitur</span>
-                                <span className="text-xs font-mono px-2 py-1 rounded bg-white/5 text-gray-400">Pemrosesan Gambar</span>
+                            <div className="pt-4 flex gap-2 flex-wrap">
+                                <span className="text-[10px] font-mono px-2 py-1 rounded bg-white/5 text-gray-400">Tekstur</span>
+                                <span className="text-[10px] font-mono px-2 py-1 rounded bg-white/5 text-gray-400">Fitur</span>
                             </div>
                         </div>
                     </div>
@@ -95,16 +93,14 @@ const Landing = ({ onNavigate }) => {
                                     Klasifikasi KNN
                                     <ArrowRight className="opacity-0 -translate-x-2 group-hover:opacity-100 group-hover:translate-x-0 transition-all text-[#00ff88]" size={20} />
                                 </h3>
-                                <p className="text-gray-400">
+                                <p className="text-gray-400 text-sm">
                                     Latih dan evaluasi model K-Nearest Neighbors pada dataset Anda.
-                                    Visualisasi akurasi dan optimalkan hyperparameter.
                                 </p>
                             </div>
 
-                            <div className="pt-4 flex gap-2">
-                                <span className="text-xs font-mono px-2 py-1 rounded bg-white/5 text-gray-400">ML</span>
-                                <span className="text-xs font-mono px-2 py-1 rounded bg-white/5 text-gray-400">Klasifikasi</span>
-                                <span className="text-xs font-mono px-2 py-1 rounded bg-white/5 text-gray-400">Prediktif</span>
+                            <div className="pt-4 flex gap-2 flex-wrap">
+                                <span className="text-[10px] font-mono px-2 py-1 rounded bg-white/5 text-gray-400">ML</span>
+                                <span className="text-[10px] font-mono px-2 py-1 rounded bg-white/5 text-gray-400">Klasifikasi</span>
                             </div>
                         </div>
                     </div>
@@ -117,7 +113,7 @@ const Landing = ({ onNavigate }) => {
 
                         <div className="relative z-10 space-y-4">
                             <div className="w-12 h-12 rounded-lg bg-white/5 flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
-                                <BrainCircuit className="text-[#00ff88]" size={24} />
+                                <Network className="text-[#00ff88]" size={24} />
                             </div>
 
                             <div>
@@ -125,16 +121,42 @@ const Landing = ({ onNavigate }) => {
                                     Naive Bayes
                                     <ArrowRight className="opacity-0 -translate-x-2 group-hover:opacity-100 group-hover:translate-x-0 transition-all text-[#00ff88]" size={20} />
                                 </h3>
-                                <p className="text-gray-400">
+                                <p className="text-gray-400 text-sm">
                                     Klasifikasi probabilistik menggunakan Teorema Bayes.
-                                    Ideal untuk data kategorikal dan klasifikasi teks.
                                 </p>
                             </div>
 
-                            <div className="pt-4 flex gap-2">
-                                <span className="text-xs font-mono px-2 py-1 rounded bg-white/5 text-gray-400">Probabilistic</span>
-                                <span className="text-xs font-mono px-2 py-1 rounded bg-white/5 text-gray-400">Bayesian</span>
-                                <span className="text-xs font-mono px-2 py-1 rounded bg-white/5 text-gray-400">Fast</span>
+                            <div className="pt-4 flex gap-2 flex-wrap">
+                                <span className="text-[10px] font-mono px-2 py-1 rounded bg-white/5 text-gray-400">Probabilistic</span>
+                                <span className="text-[10px] font-mono px-2 py-1 rounded bg-white/5 text-gray-400">Bayesian</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div
+                        onClick={() => onNavigate('decision-tree')}
+                        className="group relative p-8 rounded-2xl bg-white/5 border border-white/10 hover:border-[#00ff88]/50 transition-all cursor-pointer overflow-hidden"
+                    >
+                        <div className="absolute inset-0 bg-gradient-to-br from-[#00ff88]/0 to-[#00ff88]/5 opacity-0 group-hover:opacity-100 transition-opacity" />
+
+                        <div className="relative z-10 space-y-4">
+                            <div className="w-12 h-12 rounded-lg bg-white/5 flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+                                <TreeDeciduous className="text-[#00ff88]" size={24} />
+                            </div>
+
+                            <div>
+                                <h3 className="text-2xl font-bold mb-2 flex items-center gap-2">
+                                    Decision Tree
+                                    <ArrowRight className="opacity-0 -translate-x-2 group-hover:opacity-100 group-hover:translate-x-0 transition-all text-[#00ff88]" size={20} />
+                                </h3>
+                                <p className="text-gray-400 text-sm">
+                                    Model prediksi pohon keputusan dengan algoritma ID3.
+                                </p>
+                            </div>
+
+                            <div className="pt-4 flex gap-2 flex-wrap">
+                                <span className="text-[10px] font-mono px-2 py-1 rounded bg-white/5 text-gray-400">Tree</span>
+                                <span className="text-[10px] font-mono px-2 py-1 rounded bg-white/5 text-gray-400">ID3</span>
                             </div>
                         </div>
                     </div>
