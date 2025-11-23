@@ -3,7 +3,15 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 import os
 
-from backend.routers import glcm, knn, naive_bayes
+# Import routers with optional GLCM (requires scikit-image which may not be installed)
+from backend.routers import knn, naive_bayes, decision_tree
+
+try:
+    from backend.routers import glcm
+    GLCM_AVAILABLE = True
+except ImportError as e:
+    print(f"Warning: GLCM module not available: {e}")
+    GLCM_AVAILABLE = False
 
 app = FastAPI(title="VisKom WebGL Clone")
 
@@ -17,9 +25,11 @@ app.add_middleware(
 )
 
 # Include Routers
-app.include_router(glcm.router, prefix="/api")
+if GLCM_AVAILABLE:
+    app.include_router(glcm.router, prefix="/api")
 app.include_router(knn.router, prefix="/api")
 app.include_router(naive_bayes.router, prefix="/api")
+app.include_router(decision_tree.router, prefix="/api")
 
 # API Routes (Placeholder)
 @app.get("/api/health")

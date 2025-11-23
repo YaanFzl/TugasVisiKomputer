@@ -52,3 +52,13 @@ export const naiveBayesService = {
     }
 }
 
+export const decisionTreeService = {
+    trainGolf: async () => {
+        const response = await axios.post(`${API_URL}/decision-tree/train-golf`)
+        return response.data
+    },
+    predict: async (features) => {
+        const response = await axios.post(`${API_URL}/decision-tree/predict`, features)
+        return response.data
+    }
+}

@@ -2,13 +2,14 @@ import React, { useState, lazy, Suspense, useEffect } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 import Background from './components/Background'
 import SplashScreen from './components/SplashScreen'
-import { LayoutGrid, BrainCircuit, Network } from 'lucide-react'
+import { LayoutGrid, BrainCircuit, Network, TreeDeciduous } from 'lucide-react'
 
 // Lazy load page components for code splitting
 const Landing = lazy(() => import('./pages/Landing'))
 const GLCM = lazy(() => import('./pages/GLCM'))
 const KNN = lazy(() => import('./pages/KNN'))
 const NaiveBayes = lazy(() => import('./pages/NaiveBayes'))
+const DecisionTree = lazy(() => import('./pages/DecisionTree'))
 
 // Loading component
 const LoadingSpinner = () => (
@@ -117,8 +118,8 @@ function App() {
                         <button
                             onClick={() => setActiveModule('glcm')}
                             className={`flex items-center gap-2 px-4 py-2 rounded-full border transition-all ${activeModule === 'glcm'
-                                    ? 'bg-[#00ff88]/10 border-[#00ff88] text-[#00ff88]'
-                                    : 'border-white/10 hover:bg-white/5 text-white'
+                                ? 'bg-[#00ff88]/10 border-[#00ff88] text-[#00ff88]'
+                                : 'border-white/10 hover:bg-white/5 text-white'
                                 }`}
                         >
                             <LayoutGrid size={18} />
@@ -127,8 +128,8 @@ function App() {
                         <button
                             onClick={() => setActiveModule('knn')}
                             className={`flex items-center gap-2 px-4 py-2 rounded-full border transition-all ${activeModule === 'knn'
-                                    ? 'bg-[#00ff88]/10 border-[#00ff88] text-[#00ff88]'
-                                    : 'border-white/10 hover:bg-white/5 text-white'
+                                ? 'bg-[#00ff88]/10 border-[#00ff88] text-[#00ff88]'
+                                : 'border-white/10 hover:bg-white/5 text-white'
                                 }`}
                         >
                             <BrainCircuit size={18} />
@@ -137,12 +138,22 @@ function App() {
                         <button
                             onClick={() => setActiveModule('naive-bayes')}
                             className={`flex items-center gap-2 px-4 py-2 rounded-full border transition-all ${activeModule === 'naive-bayes'
-                                    ? 'bg-[#00ff88]/10 border-[#00ff88] text-[#00ff88]'
-                                    : 'border-white/10 hover:bg-white/5 text-white'
+                                ? 'bg-[#00ff88]/10 border-[#00ff88] text-[#00ff88]'
+                                : 'border-white/10 hover:bg-white/5 text-white'
                                 }`}
                         >
                             <Network size={18} />
                             Naive Bayes
+                        </button>
+                        <button
+                            onClick={() => setActiveModule('decision-tree')}
+                            className={`flex items-center gap-2 px-4 py-2 rounded-full border transition-all ${activeModule === 'decision-tree'
+                                ? 'bg-[#00ff88]/10 border-[#00ff88] text-[#00ff88]'
+                                : 'border-white/10 hover:bg-white/5 text-white'
+                                }`}
+                        >
+                            <TreeDeciduous size={18} />
+                            Decision Tree
                         </button>
                     </nav>
                 </motion.header>
@@ -161,6 +172,7 @@ function App() {
                                 {activeModule === 'glcm' && <GLCM />}
                                 {activeModule === 'knn' && <KNN />}
                                 {activeModule === 'naive-bayes' && <NaiveBayes />}
+                                {activeModule === 'decision-tree' && <DecisionTree />}
                             </Suspense>
                         </motion.div>
                     </AnimatePresence>

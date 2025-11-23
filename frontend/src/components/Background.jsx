@@ -276,6 +276,160 @@ const NaiveBayesSpheres = ({ mouse, transitionRotation }) => {
 }
 
 // ======================
+// DECISION TREE - Branching Tree Structure
+// ======================
+const DecisionTreeBranches = ({ mouse, transitionRotation }) => {
+  const groupRef = useRef()
+  const nodeRefs = useRef([])
+  const lineRefs = useRef([])
+
+  // Generate tree structure positions
+  const treeStructure = useMemo(() => {
+    const nodes = []
+    const lines = []
+
+    // Root node
+    nodes.push({
+      position: [0, 2, 0],
+      size: 0.3,
+      color: '#00ccff',
+      type: 'root'
+    })
+
+    // Level 1 branches
+    const level1Positions = [
+      [-3, 0, -1],
+      [0, 0, -1],
+      [3, 0, -1]
+    ]
+
+    level1Positions.forEach((pos, i) => {
+      const nodeIdx = nodes.length
+      nodes.push({
+        position: pos,
+        size: 0.25,
+        color: '#8b5cf6',
+        type: 'branch',
+        phase: i * Math.PI / 3
+      })
+
+      // Connect to root
+      lines.push({
+        start: nodes[0].position,
+        end: pos,
+        color: '#00ccff'
+      })
+
+      // Level 2 - leaf nodes
+      const leafPositions = [
+        [pos[0] - 1.2, -2, pos[2] - 1.5],
+        [pos[0] + 1.2, -2, pos[2] - 1.5]
+      ]
+
+      leafPositions.forEach((leafPos, j) => {
+        const leafColor = (i + j) % 2 === 0 ? '#00ff88' : '#ec4899'
+        nodes.push({
+          position: leafPos,
+          size: 0.2,
+          color: leafColor,
+          type: 'leaf',
+          phase: (i * 2 + j) * Math.PI / 4
+        })
+
+        lines.push({
+          start: pos,
+          end: leafPos,
+          color: '#8b5cf6'
+        })
+      })
+    })
+
+    return { nodes, lines }
+  }, [])
+
+  useFrame((state) => {
+    if (groupRef.current) {
+      const targetRotationY = state.clock.elapsedTime * 0.1 + transitionRotation * 0.35
+      groupRef.current.rotation.y = THREE.MathUtils.lerp(
+        groupRef.current.rotation.y,
+        targetRotationY,
+        0.1
+      )
+      groupRef.current.rotation.x = mouse.y * 0.15
+      groupRef.current.position.x = mouse.x * 1.5
+    }
+
+    // Animate nodes with pulsing
+    nodeRefs.current.forEach((mesh, i) => {
+      if (mesh) {
+        const node = treeStructure.nodes[i]
+        const time = state.clock.elapsedTime
+
+        // Floating animation
+        const float = Math.sin(time * 0.8 + (node.phase || 0)) * 0.2
+        mesh.position.y = node.position[1] + float
+
+        // Pulsing scale for leaf nodes
+        if (node.type === 'leaf') {
+          const pulse = 1 + Math.sin(time * 2 + (node.phase || 0)) * 0.2
+          mesh.scale.setScalar(pulse)
+        }
+
+        // Glow intensity
+        if (mesh.material.emissiveIntensity !== undefined) {
+          mesh.material.emissiveIntensity = 0.5 + Math.sin(time * 1.5 + (node.phase || 0)) * 0.3
+        }
+      }
+    })
+
+    // Animate line opacity
+    lineRefs.current.forEach((line, i) => {
+      if (line && line.material) {
+        const opacity = 0.3 + Math.sin(state.clock.elapsedTime * 0.5 + i * 0.3) * 0.2
+        line.material.opacity = opacity
+      }
+    })
+  })
+
+  return (
+    <group ref={groupRef}>
+      {/* Render lines */}
+      {treeStructure.lines.map((line, i) => (
+        <line key={`line-${i}`} ref={(el) => (lineRefs.current[i] = el)}>
+          <bufferGeometry>
+            <bufferAttribute
+              attach="attributes-position"
+              count={2}
+              array={new Float32Array([...line.start, ...line.end])}
+              itemSize={3}
+            />
+          </bufferGeometry>
+          <lineBasicMaterial color={line.color} opacity={0.4} transparent />
+        </line>
+      ))}
+
+      {/* Render nodes */}
+      {treeStructure.nodes.map((node, i) => (
+        <mesh
+          key={`node-${i}`}
+          ref={(el) => (nodeRefs.current[i] = el)}
+          position={node.position}
+        >
+          <sphereGeometry args={[node.size, 20, 20]} />
+          <meshStandardMaterial
+            color={node.color}
+            emissive={node.color}
+            emissiveIntensity={0.6}
+            metalness={0.8}
+            roughness={0.2}
+          />
+        </mesh>
+      ))}
+    </group>
+  )
+}
+
+// ======================
 // SHARED COMPONENTS
 // ======================
 const WaveGrid = ({ mouse, scroll, transitionRotation }) => {
@@ -356,6 +510,10 @@ const Scene = ({ mouse, scroll, transitionRotation, activeModule }) => {
 
       {activeModule === 'naive-bayes' && (
         <NaiveBayesSpheres mouse={mouse} transitionRotation={transitionRotation} />
+      )}
+
+      {activeModule === 'decision-tree' && (
+        <DecisionTreeBranches mouse={mouse} transitionRotation={transitionRotation} />
       )}
 
       {/* Lights */}

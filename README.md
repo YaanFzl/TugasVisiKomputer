@@ -1,43 +1,89 @@
-# VisKomClean
+# VisKom WebGL Clone
 
-A modern web application showcasing advanced UI/UX features with 3D background transitions, animated splash screen, and machine‑learning visualizations (GLCM, KNN, Naive Bayes).
+A futuristic computer vision web application with WebGL visualizations and machine learning modules.
 
-## Features
-- **Animated splash screen** with particles and scanning line effect.
-- **Smooth page transitions** powered by `framer‑motion`.
-- **Dynamic 3D backgrounds** per module using `@react‑three/fiber`:
-  - Home: particle cloud & wave grid
-  - GLCM: scattered texture pixels
-  - KNN: network nodes
-  - Naive Bayes: floating probability spheres
-- **Backend API** built with FastAPI (Python) exposing ML endpoints.
-- **Responsive design** with a cyber‑punk aesthetic.
+## 🚀 Quick Start
 
-## Getting Started
+### Option 1: Using the Start Script (Easiest!)
+Simply double-click `start.bat` or run:
 ```bash
-# Clone the repo
-git clone https://github.com/YaanFzl/TugasVisiKomputer.git
-cd TugasVisiKomputer/web
-
-# Install dependencies (frontend)
-npm install
-npm run dev   # start Vite dev server
-
-# Backend (Python)
-python -m venv .venv
-source .venv/bin/activate   # on Windows: .venv\Scripts\activate
-pip install -r requirements.txt
-uvicorn main:app --reload
+npm run dev
 ```
 
-## Deploying to Railway
-1. Sign up at https://railway.app and create a new project.
-2. Choose **Deploy from GitHub** and connect the `YaanFzl/TugasVisiKomputer` repository.
-3. Railway will detect the `backend` (FastAPI) and `frontend` (Vite) services.
-   - For the backend, set the start command to `uvicorn main:app --host 0.0.0.0 --port $PORT`.
-   - For the frontend, set the build command `npm run build` and the start command `npm run preview` (or use a static site service).
-4. Add any required environment variables (e.g., `PORT` is provided by Railway automatically).
-5. Click **Deploy** – Railway will build and launch both services, giving you a public URL.
+This will start both the frontend and backend simultaneously:
+- **Frontend**: http://localhost:5173
+- **Backend API**: http://localhost:8000
 
-## License
-MIT © 2025
+### Option 2: Manual Start
+If you prefer to run them separately:
+
+**Backend:**
+```bash
+uvicorn backend.main:app --reload --port 8000
+```
+
+**Frontend:**
+```bash
+cd frontend
+npm run dev
+```
+
+## 📦 Installation
+
+First-time setup:
+```bash
+# Install root dependencies (concurrently)
+npm install
+
+# Install frontend dependencies
+npm run install:all
+```
+
+## 🏗️ Build for Production
+
+```bash
+npm run build
+```
+
+## 📁 Project Structure
+
+```
+web/
+├── backend/           # FastAPI backend
+│   ├── main.py       # Main app entry
+│   ├── routers/      # API routes
+│   └── modules/      # ML modules
+├── frontend/         # React + Vite + Three.js
+│   ├── src/
+│   └── dist/         # Production build
+├── package.json      # Root package (unified scripts)
+└── start.bat        # Easy startup script
+```
+
+## 🎯 Features
+
+- **GLCM** - Gray Level Co-occurrence Matrix analysis
+- **KNN** - K-Nearest Neighbors classification
+- **Naive Bayes** - Probabilistic classification
+- **Decision Tree** - Tree-based classification with 3D visualization
+- **3D WebGL Visualizations** - Powered by Three.js
+- **Modern UI** - Glassmorphic design with smooth animations
+
+## 🛠️ Tech Stack
+
+**Frontend:**
+- React 18 + Vite
+- Three.js + React Three Fiber
+- TailwindCSS
+- Framer Motion
+- GSAP
+
+**Backend:**
+- FastAPI
+- NumPy, Pandas
+- Scikit-learn
+- OpenCV
+
+---
+
+Made with ❤️ for Computer Vision
