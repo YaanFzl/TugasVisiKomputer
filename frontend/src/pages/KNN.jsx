@@ -67,6 +67,61 @@ const KNN = () => {
                     </div>
                 )}
 
+                {/* Dataset Explanation */}
+                <div className="mb-6 glass-panel p-6 bg-blue-500/5 border-blue-400/20">
+                    <h3 className="text-lg font-semibold text-white mb-3 flex items-center gap-2">
+                        📊 Tentang Dataset
+                    </h3>
+                    <div className="space-y-3 text-sm text-gray-300">
+                        <p>
+                            <strong className="text-[#00ff88]">Dataset: Prediksi Persetujuan Kredit</strong>
+                        </p>
+                        <p className="text-gray-400">
+                            Model KNN akan memprediksi apakah pengajuan kredit akan disetujui (Y) atau ditolak (N)
+                            berdasarkan informasi pemohon seperti pendapatan, riwayat kredit, dan properti.
+                        </p>
+
+                        <div className="mt-4">
+                            <p className="font-semibold text-white mb-2">Format Kolom yang Diperlukan:</p>
+                            <ul className="space-y-1 text-xs text-gray-400 ml-4">
+                                <li>• <strong>Loan_ID</strong>: ID unik pemohon (opsional)</li>
+                                <li>• <strong>Gender</strong>: Male/Female</li>
+                                <li>• <strong>Married</strong>: Yes/No</li>
+                                <li>• <strong>Dependents</strong>: 0, 1, 2, 3+</li>
+                                <li>• <strong>Education</strong>: Graduate/Not Graduate</li>
+                                <li>• <strong>Self_Employed</strong>: Yes/No</li>
+                                <li>• <strong>ApplicantIncome</strong>: Pendapatan pemohon</li>
+                                <li>• <strong>CoapplicantIncome</strong>: Pendapatan pasangan</li>
+                                <li>• <strong>LoanAmount</strong>: Jumlah pinjaman (dalam ribuan)</li>
+                                <li>• <strong>Loan_Amount_Term</strong>: Jangka waktu (hari)</li>
+                                <li>• <strong>Credit_History</strong>: 1 (baik) / 0 (buruk)</li>
+                                <li>• <strong>Property_Area</strong>: Urban/Semiurban/Rural</li>
+                                <li>• <strong>Loan_Status</strong>: Y (disetujui) / N (ditolak) - <em>target</em></li>
+                            </ul>
+                        </div>
+
+                        <div className="mt-4 pt-4 border-t border-white/10">
+                            <button
+                                onClick={() => {
+                                    const link = document.createElement('a')
+                                    link.href = '/knn_template.csv'
+                                    link.download = 'knn_loan_template.csv'
+                                    link.click()
+                                }}
+                                className="px-4 py-2 bg-[#00ff88] text-black font-semibold rounded-lg hover:bg-[#00dd77] transition-colors inline-flex items-center gap-2"
+                            >
+                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                                </svg>
+                                Download Template Dataset
+                            </button>
+                            <p className="text-xs text-gray-500 mt-2">
+                                Template sudah berisi 20 contoh data. Anda bisa menambah, mengedit, atau mengganti dengan data Anda sendiri!
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                     <div className="space-y-6">
                         <div className="border-2 border-dashed border-white/20 rounded-xl p-8 text-center hover:border-[#00ff88] transition-colors relative">
