@@ -1,8 +1,6 @@
 # Railway Deployment Configuration
 providers = ["python", "node"]
 
-[phases.setup]
-nixPkgs = ["python311"]
 
 [phases.install]
 cmds = [
