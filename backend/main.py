@@ -3,6 +3,12 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 import os
 
+import sys
+import os
+
+# Add parent directory to path to allow importing 'backend' package
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
 # Import routers with optional GLCM (requires scikit-image which may not be installed)
 from backend.routers import knn, naive_bayes, decision_tree
 
