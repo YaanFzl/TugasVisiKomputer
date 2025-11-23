@@ -2,14 +2,8 @@
 providers = ["python", "node"]
 
 
-[phases.install]
-cmds = [
-    "python -m pip install -r requirements.txt",
-    "cd frontend && npm install"
-]
-
 [phases.build]
-cmds = ["cd frontend && npm run build"]
+cmds = ["cd frontend && npm install && npm run build"]
 
 [start]
 cmd = "uvicorn backend.main:app --host 0.0.0.0 --port $PORT"
