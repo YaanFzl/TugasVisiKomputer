@@ -10,6 +10,7 @@ import io
 import pickle
 import json
 
+
 router = APIRouter(prefix="/knn", tags=["knn"])
 
 # In-memory storage for the model (for simplicity in this session)
@@ -106,6 +107,8 @@ async def train_model(
         model_store["model"] = knn
         model_store["X_train"] = X_train
         model_store["y_train"] = y_train
+        
+
         
         return {
             "accuracy": float(accuracy),

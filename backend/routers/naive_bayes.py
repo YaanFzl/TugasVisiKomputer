@@ -46,6 +46,29 @@ def naive_bayes_manual(df, test, target_col):
         posterior[k] /= total_posterior
         
     return posterior, prior, likelihood
+    
+def calculate_conditional_probabilities(df, target_col):
+    """Calculate conditional probabilities for all features and classes"""
+    classes = df[target_col].unique()
+    features = [col for col in df.columns if col != target_col]
+    
+    conditional_probs = {}
+    
+    for feature in features:
+        conditional_probs[feature] = {}
+        unique_values = df[feature].unique()
+        
+        for k in classes:
+            subset = df[df[target_col] == k]
+            conditional_probs[feature][k] = {}
+            
+            for val in unique_values:
+                count = len(subset[subset[feature] == val])
+                # Laplace smoothing
+                prob = (count + 1) / (len(subset) + len(unique_values))
+                conditional_probs[feature][k][val] = float(prob)
+                
+    return conditional_probs
 
 @router.post("/train-predict")
 async def train_and_predict(request: PredictionRequest):
@@ -108,6 +131,7 @@ async def train_and_predict(request: PredictionRequest):
             feature_values[col] = df[col].unique().tolist()
         
         return {
+            "conditional_probabilities": calculate_conditional_probabilities(df, request.target),
             "dataset": request.training_data,
             "test_case": request.test_case,
             "manual_calculation": {

@@ -53,10 +53,16 @@ async def analyze_glcm(
             'ASM': graycoprops(glcm, 'ASM')[0].tolist()
         }
 
+        # Prepare matrices for all angles
+        glcm_matrices = {}
+        for i, deg in enumerate(degree_list):
+            glcm_matrices[str(deg)] = glcm[:, :, 0, i].tolist()
+
         return {
             "status": "success",
             "features": features,
-            "degrees": degree_list
+            "degrees": degree_list,
+            "glcm_matrices": glcm_matrices
         }
 
     except Exception as e:

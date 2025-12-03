@@ -1,7 +1,10 @@
 import React, { useState } from 'react'
 import { glcmService } from '../services/api'
 import { motion } from 'framer-motion'
-import { Upload, Activity } from 'lucide-react'
+import { Upload, Activity, Box } from 'lucide-react'
+import GLCM3D from '../components/visualizations/GLCM3D'
+import VisualizationModal from '../components/visualizations/VisualizationModal'
+import GLCMGeneral3D from '../components/visualizations/GLCMGeneral3D'
 
 const GLCM = () => {
     const [file, setFile] = useState(null)
@@ -9,6 +12,10 @@ const GLCM = () => {
     const [degrees, setDegrees] = useState([0, 45, 90, 135])
     const [distance, setDistance] = useState(1)
     const [results, setResults] = useState(null)
+    const [glcmMatrices, setGlcmMatrices] = useState(null)
+    const [selectedAngle, setSelectedAngle] = useState(0)
+    const [show3D, setShow3D] = useState(false)
+    const [showGeneral3D, setShowGeneral3D] = useState(false)
     const [loading, setLoading] = useState(false)
 
     const handleFileChange = (e) => {
@@ -26,6 +33,10 @@ const GLCM = () => {
         try {
             const data = await glcmService.analyze(file, degrees, distance)
             setResults(data.features)
+            setGlcmMatrices(data.glcm_matrices)
+            if (data.degrees && data.degrees.length > 0) {
+                setSelectedAngle(data.degrees[0])
+            }
         } catch (error) {
             console.error("Analysis failed:", error)
             alert("Analysis failed. Ensure backend is running.")
@@ -43,10 +54,19 @@ const GLCM = () => {
     return (
         <div className="space-y-8">
             <div className="glass-panel p-6">
-                <h2 className="text-2xl font-bold mb-6 flex items-center gap-2 text-white">
-                    <Activity className="text-[#00ff88]" />
-                    Analisis Tekstur GLCM
-                </h2>
+                <div className="flex justify-between items-center mb-6">
+                    <h2 className="text-2xl font-bold flex items-center gap-2 text-white">
+                        <Activity className="text-[#00ff88]" />
+                        Analisis Tekstur GLCM
+                    </h2>
+                    <button
+                        onClick={() => setShowGeneral3D(true)}
+                        className="flex items-center gap-2 px-4 py-2 bg-blue-600/20 hover:bg-blue-600/40 text-blue-300 rounded-lg text-sm transition-colors border border-blue-500/30"
+                    >
+                        <Box size={18} />
+                        Visualisasi Konsep
+                    </button>
+                </div>
 
                 {/* GLCM Explanation Panel */}
                 <div className="mb-6 glass-panel p-6 bg-purple-500/5 border-purple-400/20">
@@ -165,7 +185,50 @@ const GLCM = () => {
                                 animate={{ opacity: 1, y: 0 }}
                                 className="h-full"
                             >
-                                <h3 className="text-xl font-bold mb-4 text-white">Hasil Analisis</h3>
+                                <div className="flex justify-between items-center mb-4">
+                                    <h3 className="text-xl font-bold text-white">Hasil Analisis</h3>
+                                    <button
+                                        onClick={() => setShow3D(true)}
+                                        className="flex items-center gap-2 px-3 py-1.5 bg-blue-600/20 hover:bg-blue-600/40 text-blue-300 rounded-lg text-sm transition-colors border border-blue-500/30"
+                                    >
+                                        <Box size={16} />
+                                        Lihat Visualisasi 3D
+                                    </button>
+                                </div>
+
+                                <VisualizationModal
+                                    isOpen={show3D}
+                                    onClose={() => setShow3D(false)}
+                                    title="Visualisasi GLCM 3D"
+                                >
+                                    {glcmMatrices && (
+                                        <div className="h-full flex flex-col relative">
+                                            {/* Angle Selector */}
+                                            <div className="absolute top-4 left-1/2 -translate-x-1/2 z-20 bg-black/50 backdrop-blur-md p-1 rounded-lg border border-white/10 flex gap-1">
+                                                {Object.keys(glcmMatrices).map((deg) => (
+                                                    <button
+                                                        key={deg}
+                                                        onClick={() => setSelectedAngle(parseInt(deg))}
+                                                        className={`px-3 py-1 rounded text-xs font-mono transition-colors ${selectedAngle === parseInt(deg)
+                                                            ? 'bg-[#00ff88] text-black font-bold'
+                                                            : 'text-gray-400 hover:text-white hover:bg-white/10'
+                                                            }`}
+                                                    >
+                                                        {deg}°
+                                                    </button>
+                                                ))}
+                                            </div>
+
+                                            <GLCM3D
+                                                matrix={glcmMatrices[selectedAngle]}
+                                                angle={selectedAngle}
+                                                distance={distance}
+                                                features={results}
+                                            />
+                                        </div>
+                                    )}
+                                </VisualizationModal>
+
                                 <div className="grid grid-cols-1 gap-4">
                                     {Object.entries(results).map(([feature, values]) => (
                                         <div key={feature} className="glass-panel p-4">
@@ -192,6 +255,14 @@ const GLCM = () => {
                     </div>
                 </div>
             </div>
+
+            <VisualizationModal
+                isOpen={showGeneral3D}
+                onClose={() => setShowGeneral3D(false)}
+                title="Konsep GLCM: Pixel to Matrix"
+            >
+                <GLCMGeneral3D />
+            </VisualizationModal>
         </div>
     )
 }

@@ -96,14 +96,14 @@ def Id3(data, originaldata, features, target_attribute_name="PlayGolf", parent_n
     
     return tree_structure
 
-def tree_to_list(tree_dict, parent_id=0, nodes=None, edges=None):
+def tree_to_list(tree_dict, parent_id=0, nodes=None, edges=None, depth=0):
     """Convert tree dictionary to list format for frontend visualization"""
     if nodes is None:
         nodes = []
         edges = []
     
     if isinstance(tree_dict, str):
-        # Leaf node
+        # Leaf node (this case might be reached if root is a leaf)
         return tree_dict, parent_id
     
     # Get the root attribute
@@ -113,7 +113,8 @@ def tree_to_list(tree_dict, parent_id=0, nodes=None, edges=None):
     nodes.append({
         "id": current_id,
         "label": root_attr,
-        "type": "decision"
+        "type": "decision",
+        "depth": depth
     })
     
     if parent_id != current_id:
@@ -132,7 +133,8 @@ def tree_to_list(tree_dict, parent_id=0, nodes=None, edges=None):
                 "id": child_id,
                 "label": subtree,
                 "type": "leaf",
-                "value": subtree
+                "value": subtree,
+                "depth": depth + 1
             })
             edges.append({
                 "from": current_id,
@@ -140,12 +142,21 @@ def tree_to_list(tree_dict, parent_id=0, nodes=None, edges=None):
                 "label": branch_value
             })
         else:
-            # Create a branch node
+            # Create a branch node (representing the edge value/decision)
+            # Actually, in 3D we might want the branch value to be on the edge, 
+            # but for the node structure, we'll keep the current logic where 
+            # the attribute is the node.
+            # Wait, the current logic adds a "branch" node?
+            # Lines 143-149:
+            # nodes.append({ "id": branch_node_id, "label": branch_value, "type": "branch" })
+            # This seems to be adding intermediate nodes for the branch values.
+            
             branch_node_id = len(nodes)
             nodes.append({
                 "id": branch_node_id,
                 "label": branch_value,
-                "type": "branch"
+                "type": "branch",
+                "depth": depth + 1
             })
             edges.append({
                 "from": current_id,
@@ -154,7 +165,7 @@ def tree_to_list(tree_dict, parent_id=0, nodes=None, edges=None):
             })
             
             # Recurse
-            tree_to_list(subtree, branch_node_id, nodes, edges)
+            tree_to_list(subtree, branch_node_id, nodes, edges, depth + 2)
     
     return nodes, edges
 

@@ -1,7 +1,9 @@
 import React, { useState } from 'react'
 import { knnService } from '../services/api'
 import { motion } from 'framer-motion'
-import { Upload, BrainCircuit } from 'lucide-react'
+import { Upload, BrainCircuit, Box } from 'lucide-react'
+import KNNGeneral3D from '../components/visualizations/KNNGeneral3D'
+import VisualizationModal from '../components/visualizations/VisualizationModal'
 
 const KNN = () => {
     const [file, setFile] = useState(null)
@@ -12,6 +14,7 @@ const KNN = () => {
     const [results, setResults] = useState(null)
     const [loading, setLoading] = useState(false)
     const [error, setError] = useState(null)
+    const [show3D, setShow3D] = useState(false)
 
     const handleFileChange = async (e) => {
         const selectedFile = e.target.files[0]
@@ -56,10 +59,19 @@ const KNN = () => {
     return (
         <div className="space-y-8">
             <div className="glass-panel p-6">
-                <h2 className="text-2xl font-bold mb-6 flex items-center gap-2 text-white">
-                    <BrainCircuit className="text-[#00ff88]" />
-                    Klasifikasi KNN
-                </h2>
+                <div className="flex justify-between items-center mb-6">
+                    <h2 className="text-2xl font-bold flex items-center gap-2 text-white">
+                        <BrainCircuit className="text-[#00ff88]" />
+                        Klasifikasi KNN
+                    </h2>
+                    <button
+                        onClick={() => setShow3D(true)}
+                        className="flex items-center gap-2 px-4 py-2 bg-blue-600/20 hover:bg-blue-600/40 text-blue-300 rounded-lg text-sm transition-colors border border-blue-500/30"
+                    >
+                        <Box size={18} />
+                        Visualisasi Konsep KNN
+                    </button>
+                </div>
 
                 {error && (
                     <div className="mb-4 p-4 bg-red-500/10 border border-red-500/30 rounded-lg text-red-400 text-sm">
@@ -222,6 +234,8 @@ const KNN = () => {
                                     </div>
                                 </div>
 
+
+
                                 {/* Confusion Matrix */}
                                 {results.confusion_matrix && (
                                     <div className="glass-panel p-4">
@@ -254,6 +268,7 @@ const KNN = () => {
                                     </div>
                                 )}
                             </motion.div>
+
                         ) : (
                             <div className="h-full flex items-center justify-center text-gray-500 border border-white/10 rounded-xl bg-white/5 min-h-[400px]">
                                 <p>Hasil pelatihan akan muncul di sini</p>
@@ -262,8 +277,17 @@ const KNN = () => {
                     </div>
                 </div>
             </div>
-        </div>
+
+            <VisualizationModal
+                isOpen={show3D}
+                onClose={() => setShow3D(false)}
+                title="Konsep K-Nearest Neighbors (KNN)"
+            >
+                <KNNGeneral3D />
+            </VisualizationModal>
+        </div >
     )
 }
 
 export default KNN
+

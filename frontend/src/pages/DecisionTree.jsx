@@ -1,13 +1,16 @@
 import React, { useState } from 'react'
 import { decisionTreeService } from '../services/api'
 import { motion, AnimatePresence } from 'framer-motion'
-import { TreeDeciduous, Play, Calculator } from 'lucide-react'
+import { TreeDeciduous, Play, Calculator, Box } from 'lucide-react'
+import Tree3D from '../components/visualizations/Tree3D'
+import VisualizationModal from '../components/visualizations/VisualizationModal'
 
 const DecisionTree = () => {
     const [treeData, setTreeData] = useState(null)
     const [prediction, setPrediction] = useState(null)
     const [loading, setLoading] = useState(false)
     const [error, setError] = useState(null)
+    const [show3D, setShow3D] = useState(false)
 
     // Prediction form state
     const [outlook, setOutlook] = useState('Sunny')
@@ -81,10 +84,12 @@ const DecisionTree = () => {
     return (
         <div className="space-y-8">
             <div className="glass-panel p-6">
-                <h2 className="text-2xl font-bold mb-6 flex items-center gap-2 text-white">
-                    <TreeDeciduous className="text-[#00ff88]" />
-                    Decision Tree - Play Golf
-                </h2>
+                <div className="flex justify-between items-center mb-6">
+                    <h2 className="text-2xl font-bold flex items-center gap-2 text-white">
+                        <TreeDeciduous className="text-[#00ff88]" />
+                        Decision Tree - Play Golf
+                    </h2>
+                </div>
 
                 {error && (
                     <div className="mb-4 p-4 bg-red-500/10 border border-red-500/30 rounded-lg text-red-400 text-sm">
@@ -160,6 +165,23 @@ const DecisionTree = () => {
                                             {renderCompactTree(treeData.tree_structure)}
                                         </div>
                                     </div>
+                                </div>
+
+
+                                {/* 3D Visualization */}
+                                <div className="glass-panel p-4">
+                                    <div className="flex justify-between items-center mb-4">
+                                        <h3 className="text-sm font-semibold text-gray-300">Visualisasi 3D</h3>
+                                        <button
+                                            onClick={() => setShow3D(true)}
+                                            className="flex items-center gap-2 px-3 py-1.5 bg-blue-600/20 hover:bg-blue-600/40 text-blue-300 rounded-lg text-sm transition-colors border border-blue-500/30"
+                                        >
+                                            <Box size={16} />
+                                            Lihat Visualisasi 3D
+                                        </button>
+                                    </div>
+
+
                                 </div>
                             </motion.div>
                         )}
@@ -256,8 +278,8 @@ const DecisionTree = () => {
                                         initial={{ opacity: 0, scale: 0.9 }}
                                         animate={{ opacity: 1, scale: 1 }}
                                         className={`mt-6 p-6 rounded-lg text-center ${prediction.prediction === 'Yes'
-                                                ? 'bg-gradient-to-br from-[#00ff88]/20 to-transparent border border-[#00ff88]/50'
-                                                : 'bg-gradient-to-br from-pink-500/20 to-transparent border border-pink-500/50'
+                                            ? 'bg-gradient-to-br from-[#00ff88]/20 to-transparent border border-[#00ff88]/50'
+                                            : 'bg-gradient-to-br from-pink-500/20 to-transparent border border-pink-500/50'
                                             }`}
                                     >
                                         <div className="text-6xl mb-4">
@@ -296,6 +318,14 @@ const DecisionTree = () => {
                     </div>
                 </div>
             </div>
+
+            <VisualizationModal
+                isOpen={show3D}
+                onClose={() => setShow3D(false)}
+                title="Visualisasi Decision Tree 3D"
+            >
+                {treeData && <Tree3D nodes={treeData.nodes} edges={treeData.edges} />}
+            </VisualizationModal>
         </div>
     )
 }

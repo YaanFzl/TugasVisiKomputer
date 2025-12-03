@@ -4,7 +4,7 @@
     "description": "Unified startup for frontend and backend",
     "scripts": {
         "dev": "concurrently \"npm run dev:backend\" \"npm run dev:frontend\"",
-        "dev:backend": "uvicorn backend.main:app --reload --port 8000",
+        "dev:backend": "backend\\\\.venv_compatible\\\\Scripts\\\\python -m uvicorn backend.main:app --reload --port 8000",
         "dev:frontend": "cd frontend && npm run dev",
         "install:all": "cd frontend && npm install",
         "build": "cd frontend && npm run build"

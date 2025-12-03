@@ -1,44 +1,52 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState } from 'react'
 import { naiveBayesService } from '../services/api'
 import { motion } from 'framer-motion'
-import { Network, Play, RefreshCw, Info } from 'lucide-react'
+import { Upload, BrainCircuit, Box } from 'lucide-react'
+import VisualizationModal from '../components/visualizations/VisualizationModal'
+import NaiveBayes3D from '../components/visualizations/NaiveBayes3D'
+import NaiveBayesGeneral3D from '../components/visualizations/NaiveBayesGeneral3D'
 
 const NaiveBayes = () => {
-    const [dataset, setDataset] = useState([])
-    const [features, setFeatures] = useState([])
-    const [target, setTarget] = useState('')
-    const [testCase, setTestCase] = useState({})
+    const [file, setFile] = useState(null)
+    const [preview, setPreview] = useState(null)
     const [results, setResults] = useState(null)
     const [loading, setLoading] = useState(false)
     const [error, setError] = useState(null)
+    const [show3D, setShow3D] = useState(false)
+    const [showGeneral3D, setShowGeneral3D] = useState(false)
 
-    useEffect(() => {
-        loadDefaultDataset()
-    }, [])
-
-    const loadDefaultDataset = async () => {
-        try {
-            const data = await naiveBayesService.getDefaultDataset()
-            setDataset(data.data)
-            setFeatures(data.features)
-            setTarget(data.target)
-            setTestCase(data.default_test)
-        } catch (error) {
-            console.error("Failed to load default dataset:", error)
-            setError('Gagal memuat dataset default')
+    const handleFileChange = async (e) => {
+        const selectedFile = e.target.files[0]
+        if (selectedFile) {
+            setFile(selectedFile)
+            setLoading(true)
+            setError(null)
+            setPreview(null)
+            setResults(null)
+            console.log('Uploading file:', selectedFile.name)
+            try {
+                const data = await naiveBayesService.uploadDataset(selectedFile)
+                console.log('Upload response:', data)
+                setPreview(data.preview)
+                setError(null)
+            } catch (error) {
+                console.error("Upload failed:", error)
+                setError(`Gagal upload: ${error.response?.data?.detail || error.message}`)
+                setPreview(null)
+            } finally {
+                setLoading(false)
+            }
         }
     }
 
-    const handlePredict = async () => {
-        if (dataset.length === 0) return
+    const handleTrain = async () => {
         setLoading(true)
-        setError(null)
         try {
-            const data = await naiveBayesService.trainAndPredict(dataset, features, target, testCase)
+            const data = await naiveBayesService.train()
             setResults(data)
         } catch (error) {
-            console.error("Prediction failed:", error)
-            setError(`Prediksi gagal: ${error.response?.data?.detail || error.message}`)
+            console.error("Training failed:", error)
+            setError(`Pelatihan gagal: ${error.response?.data?.detail || error.message}`)
         } finally {
             setLoading(false)
         }
@@ -47,17 +55,17 @@ const NaiveBayes = () => {
     return (
         <div className="space-y-8">
             <div className="glass-panel p-6">
-                <div className="flex items-center justify-between mb-6">
+                <div className="flex justify-between items-center mb-6">
                     <h2 className="text-2xl font-bold flex items-center gap-2 text-white">
-                        <Network className="text-[#00ff88]" />
+                        <BrainCircuit className="text-[#00ff88]" />
                         Klasifikasi Naive Bayes
                     </h2>
                     <button
-                        onClick={loadDefaultDataset}
-                        className="flex items-center gap-2 px-3 py-2 bg-white/5 hover:bg-white/10 rounded-lg text-sm text-gray-300 transition-colors"
+                        onClick={() => setShowGeneral3D(true)}
+                        className="flex items-center gap-2 px-4 py-2 bg-blue-600/20 hover:bg-blue-600/40 text-blue-300 rounded-lg text-sm transition-colors border border-blue-500/30"
                     >
-                        <RefreshCw size={16} />
-                        Reset Dataset
+                        <Box size={18} />
+                        Visualisasi Konsep
                     </button>
                 </div>
 
@@ -67,75 +75,86 @@ const NaiveBayes = () => {
                     </div>
                 )}
 
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                    {/* Left: Dataset */}
-                    <div className="space-y-4">
-                        <h3 className="text-lg font-semibold text-white">Dataset Training</h3>
-                        <div className="glass-panel p-4 overflow-x-auto max-h-96 overflow-y-auto">
-                            {dataset.length > 0 && (
-                                <table className="w-full text-sm">
-                                    <thead className="sticky top-0 bg-black/50">
-                                        <tr className="border-b border-white/10">
-                                            <th className="px-3 py-2 text-left text-gray-400 font-mono">#</th>
-                                            {Object.keys(dataset[0]).map((col) => (
-                                                <th key={col} className="px-3 py-2 text-left text-gray-400 font-mono">
-                                                    {col}
-                                                </th>
-                                            ))}
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {dataset.map((row, idx) => (
-                                            <tr key={idx} className="border-b border-white/5 hover:bg-white/5">
-                                                <td className="px-3 py-2 text-gray-500">{idx + 1}</td>
-                                                {Object.values(row).map((val, i) => (
-                                                    <td key={i} className="px-3 py-2 text-white font-mono">{val}</td>
-                                                ))}
-                                            </tr>
-                                        ))}
-                                    </tbody>
-                                </table>
-                            )}
+                {/* Dataset Explanation */}
+                <div className="mb-6 glass-panel p-6 bg-blue-500/5 border-blue-400/20">
+                    <h3 className="text-lg font-semibold text-white mb-3 flex items-center gap-2">
+                        📊 Tentang Dataset
+                    </h3>
+                    <div className="space-y-3 text-sm text-gray-300">
+                        <p>
+                            <strong className="text-[#00ff88]">Dataset: Prediksi Diabetes</strong>
+                        </p>
+                        <p className="text-gray-400">
+                            Model Naive Bayes akan memprediksi kemungkinan seseorang terkena diabetes (Outcome: 1) atau tidak (Outcome: 0)
+                            berdasarkan faktor kesehatan seperti glukosa, tekanan darah, dan BMI.
+                        </p>
+
+                        <div className="mt-4">
+                            <p className="font-semibold text-white mb-2">Format Kolom yang Diperlukan:</p>
+                            <ul className="space-y-1 text-xs text-gray-400 ml-4">
+                                <li>• <strong>Pregnancies</strong>: Jumlah kehamilan</li>
+                                <li>• <strong>Glucose</strong>: Konsentrasi glukosa plasma</li>
+                                <li>• <strong>BloodPressure</strong>: Tekanan darah diastolik (mm Hg)</li>
+                                <li>• <strong>SkinThickness</strong>: Ketebalan lipatan kulit (mm)</li>
+                                <li>• <strong>Insulin</strong>: Insulin serum 2 jam (mu U/ml)</li>
+                                <li>• <strong>BMI</strong>: Indeks massa tubuh</li>
+                                <li>• <strong>DiabetesPedigreeFunction</strong>: Fungsi silsilah diabetes</li>
+                                <li>• <strong>Age</strong>: Umur (tahun)</li>
+                                <li>• <strong>Outcome</strong>: 1 (Diabetes) / 0 (Tidak) - <em>target</em></li>
+                            </ul>
                         </div>
 
-                        {/* Test Case Input */}
-                        <div className="glass-panel p-4 space-y-3">
-                            <h4 className="text-sm font-semibold text-gray-300 flex items-center gap-2">
-                                <Info size={16} className="text-blue-400" />
-                                Kasus Uji
-                            </h4>
-                            {features.map((feature) => (
-                                <div key={feature}>
-                                    <label className="block text-xs text-gray-400 mb-1">{feature}</label>
-                                    <input
-                                        type="text"
-                                        value={testCase[feature] || ''}
-                                        onChange={(e) => setTestCase({ ...testCase, [feature]: e.target.value })}
-                                        className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white text-sm focus:border-[#00ff88] focus:outline-none"
-                                    />
-                                </div>
-                            ))}
+                        <div className="mt-4 pt-4 border-t border-white/10">
                             <button
-                                onClick={handlePredict}
-                                disabled={loading || dataset.length === 0}
-                                className="w-full py-2 bg-[#00ff88] text-black font-bold rounded-lg hover:bg-[#00cc70] transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+                                onClick={() => {
+                                    const link = document.createElement('a')
+                                    link.href = '/diabetes_template.csv'
+                                    link.download = 'diabetes_template.csv'
+                                    link.click()
+                                }}
+                                className="px-4 py-2 bg-[#00ff88] text-black font-semibold rounded-lg hover:bg-[#00dd77] transition-colors inline-flex items-center gap-2"
                             >
-                                {loading ? (
-                                    <>
-                                        <div className="w-4 h-4 border-2 border-black border-t-transparent rounded-full animate-spin" />
-                                        Memproses...
-                                    </>
-                                ) : (
-                                    <>
-                                        <Play size={16} />
-                                        Prediksi
-                                    </>
-                                )}
+                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                                </svg>
+                                Download Template Dataset
                             </button>
+                            <p className="text-xs text-gray-500 mt-2">
+                                Template sudah berisi 20 contoh data. Anda bisa menambah, mengedit, atau mengganti dengan data Anda sendiri!
+                            </p>
                         </div>
                     </div>
+                </div>
 
-                    {/* Right: Results */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <div className="space-y-6">
+                        <div className="border-2 border-dashed border-white/20 rounded-xl p-8 text-center hover:border-[#00ff88] transition-colors relative">
+                            <input
+                                type="file"
+                                accept=".csv"
+                                onChange={handleFileChange}
+                                className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                            />
+                            <div className="text-gray-400">
+                                <Upload className="w-12 h-12 mx-auto mb-2" />
+                                <p>{file ? file.name : "Upload Dataset CSV"}</p>
+                                {loading && !preview && <p className="text-sm mt-2">Memuat...</p>}
+                            </div>
+                        </div>
+
+                        {preview && (
+                            <div className="space-y-4">
+                                <button
+                                    onClick={handleTrain}
+                                    disabled={loading}
+                                    className="w-full py-3 bg-white text-black font-bold rounded-lg hover:bg-gray-200 transition-colors disabled:opacity-50"
+                                >
+                                    {loading ? 'Melatih...' : 'Latih Model'}
+                                </button>
+                            </div>
+                        )}
+                    </div>
+
                     <div className="space-y-4">
                         {results ? (
                             <motion.div
@@ -143,96 +162,113 @@ const NaiveBayes = () => {
                                 animate={{ opacity: 1, y: 0 }}
                                 className="space-y-4"
                             >
-                                {/* Manual Calculation */}
-                                <div className="glass-panel p-4">
-                                    <h4 className="text-sm font-semibold text-gray-300 mb-3">📊 Perhitungan Manual</h4>
-
-                                    {/* Prior */}
-                                    <div className="mb-3">
-                                        <div className="text-xs text-gray-500 mb-1">Prior Probability:</div>
-                                        <div className="flex gap-2">
-                                            {Object.entries(results.manual_calculation.prior).map(([k, v]) => (
-                                                <div key={k} className="flex-1 bg-white/5 rounded px-2 py-1 text-center">
-                                                    <div className="text-xs text-gray-400">{k}</div>
-                                                    <div className="text-sm font-mono text-blue-400">{v.toFixed(4)}</div>
-                                                </div>
-                                            ))}
-                                        </div>
+                                {/* Main Accuracy Card */}
+                                <div className="glass-panel p-6 text-center bg-gradient-to-br from-[#00ff88]/10 to-transparent border-[#00ff88]/30">
+                                    <div className="text-5xl font-bold text-[#00ff88] mb-2">
+                                        {(results.accuracy * 100).toFixed(2)}%
                                     </div>
+                                    <div className="text-gray-400 text-sm">Akurasi Model</div>
+                                </div>
 
-                                    {/* Posterior */}
-                                    <div className="mb-3">
-                                        <div className="text-xs text-gray-500 mb-1">Posterior Probability:</div>
-                                        <div className="flex gap-2">
-                                            {Object.entries(results.manual_calculation.posterior).map(([k, v]) => (
-                                                <div key={k} className="flex-1 bg-white/5 rounded px-2 py-1 text-center">
-                                                    <div className="text-xs text-gray-400">{k}</div>
-                                                    <div className="text-lg font-bold text-[#00ff88]">{(v * 100).toFixed(2)}%</div>
-                                                </div>
-                                            ))}
+                                {/* Metrics Grid */}
+                                <div className="grid grid-cols-3 gap-3">
+                                    <div className="glass-panel p-4 text-center">
+                                        <div className="text-2xl font-bold text-blue-400">
+                                            {(results.precision * 100).toFixed(1)}%
                                         </div>
+                                        <div className="text-xs text-gray-500 mt-1">Presisi</div>
                                     </div>
-
-                                    {/* Prediction */}
-                                    <div className="bg-gradient-to-r from-[#00ff88]/20 to-transparent border border-[#00ff88]/30 rounded-lg p-3 text-center">
-                                        <div className="text-xs text-gray-400">Prediksi Manual:</div>
-                                        <div className="text-2xl font-bold text-[#00ff88]">{results.manual_calculation.prediction}</div>
+                                    <div className="glass-panel p-4 text-center">
+                                        <div className="text-2xl font-bold text-purple-400">
+                                            {(results.recall * 100).toFixed(1)}%
+                                        </div>
+                                        <div className="text-xs text-gray-500 mt-1">Recall</div>
+                                    </div>
+                                    <div className="glass-panel p-4 text-center">
+                                        <div className="text-2xl font-bold text-pink-400">
+                                            {(results.f1_score * 100).toFixed(1)}%
+                                        </div>
+                                        <div className="text-xs text-gray-500 mt-1">Skor F1</div>
                                     </div>
                                 </div>
 
-                                {/* Sklearn Calculation */}
-                                <div className="glass-panel p-4">
-                                    <h4 className="text-sm font-semibold text-gray-300 mb-3">🤖 Perhitungan Sklearn</h4>
+                                {/* Dataset Info */}
+                                <div className="grid grid-cols-2 gap-3">
+                                    <div className="glass-panel p-4">
+                                        <div className="text-white font-bold text-lg">{results.train_size}</div>
+                                        <div className="text-gray-500 text-xs">Sampel Training</div>
+                                    </div>
+                                    <div className="glass-panel p-4">
+                                        <div className="text-white font-bold text-lg">{results.test_size}</div>
+                                        <div className="text-gray-500 text-xs">Sampel Test</div>
+                                    </div>
+                                </div>
 
-                                    <div className="mb-3">
-                                        <div className="text-xs text-gray-500 mb-1">Probabilities:</div>
-                                        <div className="flex gap-2">
-                                            {Object.entries(results.sklearn_calculation.probabilities).map(([k, v]) => (
-                                                <div key={k} className="flex-1 bg-white/5 rounded px-2 py-1 text-center">
-                                                    <div className="text-xs text-gray-400">{k}</div>
-                                                    <div className="text-lg font-bold text-purple-400">{(v * 100).toFixed(2)}%</div>
-                                                </div>
-                                            ))}
+                                {/* Confusion Matrix */}
+                                {results.confusion_matrix && (
+                                    <div className="glass-panel p-4">
+                                        <h3 className="text-sm font-semibold text-gray-300 mb-3">Matriks Konfusi</h3>
+                                        <div className="grid grid-cols-2 gap-2 max-w-[200px] mx-auto">
+                                            {results.confusion_matrix.map((row, i) =>
+                                                row.map((val, j) => (
+                                                    <div
+                                                        key={`${i}-${j}`}
+                                                        className="aspect-square flex items-center justify-center rounded-lg font-bold text-sm"
+                                                        style={{
+                                                            background: i === j
+                                                                ? 'rgba(0, 255, 136, 0.2)'
+                                                                : 'rgba(236, 72, 153, 0.2)',
+                                                            border: i === j
+                                                                ? '1px solid rgba(0, 255, 136, 0.4)'
+                                                                : '1px solid rgba(236, 72, 153, 0.4)',
+                                                            color: i === j ? '#00ff88' : '#ec4899'
+                                                        }}
+                                                    >
+                                                        {val}
+                                                    </div>
+                                                ))
+                                            )}
+                                        </div>
+                                        <div className="mt-2 text-xs text-gray-500 text-center">
+                                            <span className="text-[#00ff88]">■</span> Benar
+                                            <span className="ml-3 text-pink-400">■</span> Salah
                                         </div>
                                     </div>
+                                )}
 
-                                    <div className="bg-gradient-to-r from-purple-500/20 to-transparent border border-purple-400/30 rounded-lg p-3 text-center">
-                                        <div className="text-xs text-gray-400">Prediksi Sklearn:</div>
-                                        <div className="text-2xl font-bold text-purple-400">{results.sklearn_calculation.prediction}</div>
-                                    </div>
-                                </div>
-
-                                {/* Info */}
-                                <div className="glass-panel p-3 bg-blue-500/10 border-blue-400/20">
-                                    <div className="text-xs text-gray-400">
-                                        ✅ Total sampel: <span className="text-white font-mono">{results.num_samples}</span>
-                                    </div>
-                                </div>
+                                <button
+                                    onClick={() => setShow3D(true)}
+                                    className="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-lg transition-colors flex items-center justify-center gap-2"
+                                >
+                                    <Box size={20} />
+                                    Lihat Visualisasi 3D
+                                </button>
                             </motion.div>
+
                         ) : (
                             <div className="h-full flex items-center justify-center text-gray-500 border border-white/10 rounded-xl bg-white/5 min-h-[400px]">
-                                <div className="text-center">
-                                    <Network className="w-12 h-12 mx-auto mb-2 opacity-50" />
-                                    <p>Hasil prediksi akan muncul di sini</p>
-                                </div>
+                                <p>Hasil pelatihan akan muncul di sini</p>
                             </div>
                         )}
                     </div>
                 </div>
             </div>
 
-            {/* Info Box */}
-            <div className="glass-panel p-4 bg-blue-500/10 border-blue-400/30">
-                <h4 className="text-sm font-semibold text-blue-300 mb-2 flex items-center gap-2">
-                    <Info size={16} />
-                    Tentang Naive Bayes
-                </h4>
-                <p className="text-xs text-gray-400 leading-relaxed">
-                    Naive Bayes adalah algoritma klasifikasi probabilistik berdasarkan <strong>Teorema Bayes</strong> dengan asumsi independensi antar fitur.
-                    Algoritma ini menghitung <em>prior probability</em> dan <em>likelihood</em> untuk setiap kelas, kemudian menggunakan Teorema Bayes
-                    untuk menghitung <em>posterior probability</em>. Implementasi di atas menggunakan <strong>Laplace smoothing</strong> untuk menangani nilai yang belum pernah muncul.
-                </p>
-            </div>
+            <VisualizationModal
+                isOpen={show3D}
+                onClose={() => setShow3D(false)}
+                title="Visualisasi Naive Bayes 3D"
+            >
+                {results && results.conditional_probabilities && <NaiveBayes3D conditionalProbs={results.conditional_probabilities} />}
+            </VisualizationModal>
+
+            <VisualizationModal
+                isOpen={showGeneral3D}
+                onClose={() => setShowGeneral3D(false)}
+                title="Konsep Naive Bayes: Play Tennis?"
+            >
+                <NaiveBayesGeneral3D />
+            </VisualizationModal>
         </div>
     )
 }
