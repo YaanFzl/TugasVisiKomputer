@@ -1,6 +1,6 @@
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useState, Suspense } from 'react';
 import { Canvas } from '@react-three/fiber';
-import { OrbitControls, Text, Html, PerspectiveCamera } from '@react-three/drei';
+import { OrbitControls, Html, PerspectiveCamera } from '@react-three/drei';
 import * as THREE from 'three';
 
 const Bar = ({ position, height, color, label, prob, feature, cls, onHover }) => {
@@ -15,20 +15,34 @@ const Bar = ({ position, height, color, label, prob, feature, cls, onHover }) =>
                 <meshStandardMaterial color={color} roughness={0.2} metalness={0.6} />
             </mesh>
 
-            {/* Value Label at bottom */}
-            <Text
-                position={[0, -0.2, 0.4]}
-                rotation={[-Math.PI / 4, 0, 0]}
-                fontSize={0.25}
-                color="#94a3b8"
-                anchorX="center"
-                anchorY="top"
+            {/* Value Label at bottom using Html */}
+            <Html
+                position={[0, -0.3, 0]}
+                center
+                distanceFactor={10}
+                style={{ pointerEvents: 'none' }}
             >
-                {label}
-            </Text>
+                <div style={{
+                    color: '#94a3b8',
+                    fontSize: '10px',
+                    fontWeight: 'bold',
+                    whiteSpace: 'nowrap',
+                    textShadow: '0 0 3px black'
+                }}>
+                    {label}
+                </div>
+            </Html>
         </group>
     );
 };
+
+// Loading fallback
+const LoadingFallback = () => (
+    <mesh>
+        <boxGeometry args={[1, 1, 1]} />
+        <meshStandardMaterial color="#333" wireframe />
+    </mesh>
+);
 
 const NaiveBayes3D = ({ conditionalProbs }) => {
     const [hoverInfo, setHoverInfo] = useState(null);
@@ -42,14 +56,10 @@ const NaiveBayes3D = ({ conditionalProbs }) => {
     const data = useMemo(() => {
         const items = [];
         const features = Object.keys(conditionalProbs);
-        if (features.length === 0) return { items: [], features: [], classes: [] };
+        if (features.length === 0) return { items: [], features: [], classes: [], featureLabels: [], totalWidth: 0 };
 
         const firstFeature = features[0];
         const classes = Object.keys(conditionalProbs[firstFeature] || {});
-
-        // Layout:
-        // Group by Feature -> Value
-        // Z axis separates Classes
 
         let xOffset = 0;
         const featureLabels = [];
@@ -65,7 +75,7 @@ const NaiveBayes3D = ({ conditionalProbs }) => {
                     const prob = conditionalProbs[feature][cls][val] || 0;
 
                     items.push({
-                        position: [xOffset + vIdx * 1.2, 0, cIdx * 1.5], // Tighter spacing
+                        position: [xOffset + vIdx * 1.2, 0, cIdx * 1.5],
                         height: Math.max(0.1, prob * 6),
                         prob: prob,
                         feature: feature,
@@ -76,13 +86,12 @@ const NaiveBayes3D = ({ conditionalProbs }) => {
                 });
             });
 
-            // Feature Label centered under its values
             featureLabels.push({
                 text: feature,
                 position: [startX + (values.length * 1.2) / 2 - 0.6, 0, classes.length * 1.5 + 1]
             });
 
-            xOffset += values.length * 1.2 + 2; // Gap between features
+            xOffset += values.length * 1.2 + 2;
         });
 
         return { items, features, classes, featureLabels, totalWidth: xOffset };
@@ -128,41 +137,50 @@ const NaiveBayes3D = ({ conditionalProbs }) => {
             )}
 
             <Canvas shadows dpr={[1, 2]}>
-                <PerspectiveCamera makeDefault position={[data.totalWidth / 2, 8, 15]} fov={45} />
-                <color attach="background" args={['#050b14']} />
+                <Suspense fallback={<LoadingFallback />}>
+                    <PerspectiveCamera makeDefault position={[data.totalWidth / 2, 8, 15]} fov={45} />
+                    <color attach="background" args={['#050b14']} />
 
-                <ambientLight intensity={0.6} />
-                <pointLight position={[10, 10, 10]} intensity={1} />
-                <pointLight position={[-10, 5, -10]} intensity={0.5} />
+                    <ambientLight intensity={0.6} />
+                    <pointLight position={[10, 10, 10]} intensity={1} />
+                    <pointLight position={[-10, 5, -10]} intensity={0.5} />
 
-                <OrbitControls target={[data.totalWidth / 2, 0, 0]} autoRotate autoRotateSpeed={0.2} />
+                    <OrbitControls target={[data.totalWidth / 2, 0, 0]} autoRotate autoRotateSpeed={0.2} />
 
-                <group position={[0, -1, 0]}>
-                    <gridHelper args={[data.totalWidth * 2, 40, 0x334155, 0x1e293b]} position={[data.totalWidth / 2, 0.01, 0]} />
+                    <group position={[0, -1, 0]}>
+                        <gridHelper args={[data.totalWidth * 2, 40, 0x334155, 0x1e293b]} position={[data.totalWidth / 2, 0.01, 0]} />
 
-                    {data.items.map((item, i) => (
-                        <Bar
-                            key={i}
-                            {...item}
-                            onHover={setHoverInfo}
-                        />
-                    ))}
+                        {data.items.map((item, i) => (
+                            <Bar
+                                key={i}
+                                {...item}
+                                label={item.value}
+                                onHover={setHoverInfo}
+                            />
+                        ))}
 
-                    {/* Feature Labels */}
-                    {data.featureLabels.map((label, i) => (
-                        <Text
-                            key={i}
-                            position={label.position}
-                            rotation={[-Math.PI / 2, 0, 0]}
-                            fontSize={0.8}
-                            color="white"
-                            anchorX="center"
-                            anchorY="top"
-                        >
-                            {label.text}
-                        </Text>
-                    ))}
-                </group>
+                        {/* Feature Labels using Html */}
+                        {data.featureLabels.map((label, i) => (
+                            <group key={i} position={label.position}>
+                                <Html
+                                    center
+                                    distanceFactor={12}
+                                    style={{ pointerEvents: 'none' }}
+                                >
+                                    <div style={{
+                                        color: 'white',
+                                        fontSize: '14px',
+                                        fontWeight: 'bold',
+                                        whiteSpace: 'nowrap',
+                                        textShadow: '0 0 5px black'
+                                    }}>
+                                        {label.text}
+                                    </div>
+                                </Html>
+                            </group>
+                        ))}
+                    </group>
+                </Suspense>
             </Canvas>
         </div>
     );
