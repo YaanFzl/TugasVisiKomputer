@@ -62,3 +62,19 @@ export const decisionTreeService = {
         return response.data
     }
 }
+
+export const lbpService = {
+    analyze: async (file, radius = 1, nPoints = 8, method = 'uniform') => {
+        const formData = new FormData()
+        formData.append('file', file)
+        formData.append('radius', radius)
+        formData.append('n_points', nPoints)
+        formData.append('method', method)
+
+        const response = await axios.post(`${API_URL}/glcm/lbp/analyze`, formData, {
+            headers: { 'Content-Type': 'multipart/form-data' }
+        })
+        return response.data
+    }
+}
+

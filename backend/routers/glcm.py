@@ -67,3 +67,48 @@ async def analyze_glcm(
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+
+# ============== LBP (Local Binary Pattern) Endpoints ==============
+
+from backend.modules.lbp_module import compute_lbp, compute_lbp_histogram, analyze_texture_uniformity
+
+
+@router.post("/lbp/analyze")
+async def lbp_analyze(
+    file: UploadFile = File(...),
+    radius: int = Form(1),
+    n_points: int = Form(8),
+    method: str = Form("uniform")
+):
+    """Compute LBP and return analysis results"""
+    try:
+        # Read image
+        contents = await file.read()
+        image = Image.open(io.BytesIO(contents)).convert("RGB")
+        img_array = np.array(image)
+        
+        # Compute LBP
+        lbp_normalized, lbp_raw, info = compute_lbp(img_array, radius, n_points, method)
+        
+        # Get histogram
+        histogram_data = compute_lbp_histogram(lbp_raw, n_bins=n_points + 2 if method == 'uniform' else 256)
+        
+        # Get uniformity analysis
+        uniformity = analyze_texture_uniformity(lbp_raw)
+        
+        # Convert LBP image to base64
+        lbp_img = Image.fromarray(lbp_normalized)
+        buffer = io.BytesIO()
+        lbp_img.save(buffer, format="PNG")
+        lbp_base64 = base64.b64encode(buffer.getvalue()).decode('utf-8')
+        
+        return {
+            "status": "success",
+            "lbp_image": lbp_base64,
+            "info": info,
+            "histogram": histogram_data,
+            "uniformity": uniformity
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
