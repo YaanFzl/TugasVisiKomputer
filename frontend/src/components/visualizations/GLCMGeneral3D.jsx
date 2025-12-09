@@ -1,7 +1,6 @@
-import React, { useState, useMemo } from 'react'
+import React, { useState, useMemo, Suspense } from 'react'
 import { Canvas } from '@react-three/fiber'
-import { OrbitControls, Text, Line, Box } from '@react-three/drei'
-import * as THREE from 'three'
+import { OrbitControls, Line, Box } from '@react-three/drei'
 
 // Colors for gray levels 0-3
 const GRAY_LEVELS = ['#1a1a1a', '#666666', '#b3b3b3', '#ffffff']
@@ -16,16 +15,18 @@ const PixelCube = ({ position, value, onClick, isHighlighted }) => {
                     emissiveIntensity={isHighlighted ? 0.5 : 0}
                 />
             </Box>
-            <Text
-                position={[0, 0, 0.51]}
-                fontSize={0.4}
-                color={value < 2 ? 'white' : 'black'}
-            >
-                {value}
-            </Text>
+            {/* Remove Text component - use HTML overlay instead */}
         </group>
     )
 }
+
+// Fallback component for loading
+const LoadingFallback = () => (
+    <mesh>
+        <boxGeometry args={[1, 1, 1]} />
+        <meshStandardMaterial color="#333" wireframe />
+    </mesh>
+)
 
 const GLCMGeneral3D = () => {
     // 4x4 Grid State (0-3 values)
@@ -49,10 +50,11 @@ const GLCMGeneral3D = () => {
     // Calculate GLCM Matrix
     const glcmMatrix = useMemo(() => {
         const matrix = Array(4).fill(0).map(() => Array(4).fill(0))
-        const pairs = [] // Store pairs for visualization
+        const pairs = []
 
-        const dr = [0, -1, -1, -1][direction / 45]
-        const dc = [1, 1, 0, -1][direction / 45]
+        const dirIndex = Math.floor(direction / 45)
+        const dr = [0, -1, -1, -1][dirIndex]
+        const dc = [1, 1, 0, -1][dirIndex]
 
         for (let r = 0; r < 4; r++) {
             for (let c = 0; c < 4; c++) {
@@ -97,7 +99,7 @@ const GLCMGeneral3D = () => {
                             <strong className="text-white">Cara Kerja:</strong>
                         </p>
                         <p className="mb-1">1. Klik kotak di grid 3D untuk ubah nilai (0-3).</p>
-                        <p>2. Sistem mencari pasangan piksel tetangga sesuai arah panah.</p>
+                        <p>2. Sistem mencari pasangan piksel tetangga sesuai arah.</p>
                     </div>
                 </div>
 
@@ -151,59 +153,80 @@ const GLCMGeneral3D = () => {
             {/* 3D Scene */}
             <div className="flex-1 relative bg-[#0f172a]">
                 <Canvas camera={{ position: [0, 0, 8], fov: 50 }}>
-                    <ambientLight intensity={0.5} />
-                    <pointLight position={[10, 10, 10]} intensity={1} />
-                    <OrbitControls enableRotate={true} enableZoom={true} />
+                    <Suspense fallback={<LoadingFallback />}>
+                        <ambientLight intensity={0.5} />
+                        <pointLight position={[10, 10, 10]} intensity={1} />
+                        <OrbitControls enableRotate={true} enableZoom={true} />
 
-                    <group position={[-1.5, -1.5, 0]}>
-                        {/* Pixel Grid */}
-                        {grid.map((row, r) =>
-                            row.map((val, c) => {
-                                // Check if this pixel is part of the hovered matrix cell pair
-                                let isHighlighted = false
-                                if (hoveredMatrixCell) {
-                                    const [targetV1, targetV2] = hoveredMatrixCell
-                                    // Check if this pixel is a start or end point of a matching pair
-                                    isHighlighted = glcmMatrix.pairs.some(p =>
-                                        p.v1 === targetV1 && p.v2 === targetV2 &&
-                                        ((p.r1 === r && p.c1 === c) || (p.r2 === r && p.c2 === c))
+                        <group position={[-1.5, -1.5, 0]}>
+                            {/* Pixel Grid */}
+                            {grid.map((row, r) =>
+                                row.map((val, c) => {
+                                    let isHighlighted = false
+                                    if (hoveredMatrixCell) {
+                                        const [targetV1, targetV2] = hoveredMatrixCell
+                                        isHighlighted = glcmMatrix.pairs.some(p =>
+                                            p.v1 === targetV1 && p.v2 === targetV2 &&
+                                            ((p.r1 === r && p.c1 === c) || (p.r2 === r && p.c2 === c))
+                                        )
+                                    }
+
+                                    return (
+                                        <PixelCube
+                                            key={`${r}-${c}`}
+                                            position={[c, 3 - r, 0]}
+                                            value={val}
+                                            onClick={(e) => {
+                                                e.stopPropagation()
+                                                handlePixelClick(r, c)
+                                            }}
+                                            isHighlighted={isHighlighted}
+                                        />
                                     )
-                                }
+                                })
+                            )}
 
-                                return (
-                                    <PixelCube
-                                        key={`${r}-${c}`}
-                                        position={[c, 3 - r, 0]} // Flip Y for visual consistency
-                                        value={val}
-                                        onClick={(e) => {
-                                            e.stopPropagation()
-                                            handlePixelClick(r, c)
-                                        }}
-                                        isHighlighted={isHighlighted}
+                            {/* Connection Lines */}
+                            {hoveredMatrixCell && glcmMatrix.pairs
+                                .filter(p => p.v1 === hoveredMatrixCell[0] && p.v2 === hoveredMatrixCell[1])
+                                .map((p, i) => (
+                                    <Line
+                                        key={i}
+                                        points={[
+                                            [p.c1, 3 - p.r1, 0.5],
+                                            [p.c2, 3 - p.r2, 0.5]
+                                        ]}
+                                        color="#00ff88"
+                                        lineWidth={3}
+                                        transparent
+                                        opacity={0.8}
                                     />
-                                )
-                            })
-                        )}
-
-                        {/* Connection Lines (Only when hovering matrix) */}
-                        {hoveredMatrixCell && glcmMatrix.pairs
-                            .filter(p => p.v1 === hoveredMatrixCell[0] && p.v2 === hoveredMatrixCell[1])
-                            .map((p, i) => (
-                                <Line
-                                    key={i}
-                                    points={[
-                                        [p.c1, 3 - p.r1, 0.5],
-                                        [p.c2, 3 - p.r2, 0.5]
-                                    ]}
-                                    color="#00ff88"
-                                    lineWidth={3}
-                                    transparent
-                                    opacity={0.8}
-                                />
-                            ))
-                        }
-                    </group>
+                                ))
+                            }
+                        </group>
+                    </Suspense>
                 </Canvas>
+
+                {/* 2D Grid Labels Overlay */}
+                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none"
+                    style={{ width: '160px', height: '160px' }}>
+                    <div className="grid grid-cols-4 gap-0 w-full h-full">
+                        {grid.map((row, r) =>
+                            row.map((val, c) => (
+                                <div
+                                    key={`label-${r}-${c}`}
+                                    className="flex items-center justify-center text-xs font-bold"
+                                    style={{
+                                        color: val < 2 ? 'white' : 'black',
+                                        textShadow: '0 0 3px rgba(0,0,0,0.5)'
+                                    }}
+                                >
+                                    {val}
+                                </div>
+                            ))
+                        )}
+                    </div>
+                </div>
             </div>
         </div>
     )

@@ -1,6 +1,6 @@
-import React, { useState, useMemo } from 'react'
+import React, { useState, useMemo, Suspense } from 'react'
 import { Canvas } from '@react-three/fiber'
-import { OrbitControls, Text, Box } from '@react-three/drei'
+import { OrbitControls, Box } from '@react-three/drei'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Calculator, ChevronDown, ChevronUp } from 'lucide-react'
 
@@ -28,33 +28,25 @@ const LIKELIHOODS = {
     }
 }
 
-const Bar3D = ({ position, height, color, label, value }) => {
+// Simplified 3D Bar without Text (lighter for production)
+const Bar3D = ({ position, height, color }) => {
+    const safeHeight = Math.max(0.1, height) // Prevent zero height
     return (
         <group position={position}>
-            <Box args={[1, height, 1]} position={[0, height / 2, 0]}>
+            <Box args={[1, safeHeight, 1]} position={[0, safeHeight / 2, 0]}>
                 <meshStandardMaterial color={color} transparent opacity={0.8} />
             </Box>
-            <Text
-                position={[0, height + 0.5, 0]}
-                fontSize={0.3}
-                color="white"
-                anchorX="center"
-                anchorY="bottom"
-            >
-                {`${(value * 100).toFixed(1)}%`}
-            </Text>
-            <Text
-                position={[0, -0.5, 0]}
-                fontSize={0.3}
-                color="#9ca3af"
-                anchorX="center"
-                anchorY="top"
-            >
-                {label}
-            </Text>
         </group>
     )
 }
+
+// Fallback component for loading
+const LoadingFallback = () => (
+    <mesh>
+        <boxGeometry args={[1, 1, 1]} />
+        <meshStandardMaterial color="#333" wireframe />
+    </mesh>
+)
 
 const NaiveBayesGeneral3D = () => {
     const [conditions, setConditions] = useState({
@@ -70,7 +62,6 @@ const NaiveBayesGeneral3D = () => {
         let probNo = PRIORS.No
         const details = { Yes: [], No: [] }
 
-        // Calculate P(X|Yes) * P(Yes) and P(X|No) * P(No)
         Object.keys(conditions).forEach(feature => {
             const value = conditions[feature]
             const pYes = LIKELIHOODS[feature][value].Yes
@@ -83,11 +74,10 @@ const NaiveBayesGeneral3D = () => {
             details.No.push({ feature, value, prob: pNo })
         })
 
-        // Normalize
         const total = probYes + probNo
         return {
-            Yes: probYes / total,
-            No: probNo / total,
+            Yes: total > 0 ? probYes / total : 0.5,
+            No: total > 0 ? probNo / total : 0.5,
             rawYes: probYes,
             rawNo: probNo,
             details
@@ -135,9 +125,11 @@ const NaiveBayesGeneral3D = () => {
                 {/* Result (Right) */}
                 <div className="bg-black/80 backdrop-blur-md p-5 rounded-xl border border-white/10 shadow-xl text-center pointer-events-auto">
                     <h4 className="text-sm font-semibold text-gray-300 mb-2">Prediction</h4>
-                    <div className={`text-4xl font-black mb-2 ${prediction === 'YES' ? 'text-[#00ff88]' : 'text-red-500'
-                        }`}>
+                    <div className={`text-4xl font-black mb-2 ${prediction === 'YES' ? 'text-[#00ff88]' : 'text-red-500'}`}>
                         {prediction}
+                    </div>
+                    <div className="text-xs text-gray-500">
+                        YES: {(probabilities.Yes * 100).toFixed(1)}% | NO: {(probabilities.No * 100).toFixed(1)}%
                     </div>
                 </div>
             </div>
@@ -219,37 +211,43 @@ const NaiveBayesGeneral3D = () => {
             {/* 3D Scene */}
             <div className="flex-1 relative bg-[#0f172a]">
                 <Canvas camera={{ position: [0, 2, 8], fov: 45 }}>
-                    <ambientLight intensity={0.5} />
-                    <pointLight position={[10, 10, 10]} intensity={1} />
-                    <OrbitControls enableZoom={false} minPolarAngle={Math.PI / 4} maxPolarAngle={Math.PI / 2} />
+                    <Suspense fallback={<LoadingFallback />}>
+                        <ambientLight intensity={0.5} />
+                        <pointLight position={[10, 10, 10]} intensity={1} />
+                        <OrbitControls enableZoom={false} minPolarAngle={Math.PI / 4} maxPolarAngle={Math.PI / 2} />
 
-                    <group position={[0, -0.5, 0]}>
-                        {/* Yes Bar */}
-                        <Bar3D
-                            position={[-1.5, 0, 0]}
-                            height={probabilities.Yes * 5}
-                            color="#00ff88"
-                            label="YES"
-                            value={probabilities.Yes}
-                        />
+                        <group position={[0, -0.5, 0]}>
+                            {/* Yes Bar */}
+                            <Bar3D
+                                position={[-1.5, 0, 0]}
+                                height={probabilities.Yes * 5}
+                                color="#00ff88"
+                            />
 
-                        {/* No Bar */}
-                        <Bar3D
-                            position={[1.5, 0, 0]}
-                            height={probabilities.No * 5}
-                            color="#ef4444"
-                            label="NO"
-                            value={probabilities.No}
-                        />
+                            {/* No Bar */}
+                            <Bar3D
+                                position={[1.5, 0, 0]}
+                                height={probabilities.No * 5}
+                                color="#ef4444"
+                            />
 
-                        {/* Base Plane */}
-                        <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0, 0]}>
-                            <planeGeometry args={[8, 4]} />
-                            <meshStandardMaterial color="#1e293b" transparent opacity={0.5} />
-                        </mesh>
-                        <gridHelper args={[8, 8, 0x334155, 0x1e293b]} position={[0, 0.01, 0]} />
-                    </group>
+                            {/* Base Plane */}
+                            <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0, 0]}>
+                                <planeGeometry args={[8, 4]} />
+                                <meshStandardMaterial color="#1e293b" transparent opacity={0.5} />
+                            </mesh>
+                            <gridHelper args={[8, 8, 0x334155, 0x1e293b]} position={[0, 0.01, 0]} />
+                        </group>
+
+                        {/* Labels as HTML overlay instead of 3D Text */}
+                    </Suspense>
                 </Canvas>
+
+                {/* 2D Labels overlay (more reliable than 3D Text) */}
+                <div className="absolute bottom-20 left-1/2 -translate-x-1/2 flex gap-16 text-center">
+                    <div className="text-[#00ff88] font-bold text-sm">YES</div>
+                    <div className="text-red-500 font-bold text-sm">NO</div>
+                </div>
             </div>
         </div>
     )
