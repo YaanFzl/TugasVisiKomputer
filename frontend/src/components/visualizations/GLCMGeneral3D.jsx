@@ -1,6 +1,6 @@
 import React, { useState, useMemo, Suspense } from 'react'
 import { Canvas } from '@react-three/fiber'
-import { OrbitControls, Line, Box } from '@react-three/drei'
+import { OrbitControls, Line, Box, Html } from '@react-three/drei'
 
 // Colors for gray levels 0-3
 const GRAY_LEVELS = ['#1a1a1a', '#666666', '#b3b3b3', '#ffffff']
@@ -15,7 +15,27 @@ const PixelCube = ({ position, value, onClick, isHighlighted }) => {
                     emissiveIntensity={isHighlighted ? 0.5 : 0}
                 />
             </Box>
-            {/* Remove Text component - use HTML overlay instead */}
+            {/* Use Html component which is more stable than Text */}
+            <Html
+                position={[0, 0, 0.5]}
+                center
+                distanceFactor={8}
+                style={{
+                    pointerEvents: 'none',
+                    userSelect: 'none',
+                }}
+            >
+                <div
+                    style={{
+                        color: value < 2 ? 'white' : 'black',
+                        fontSize: '16px',
+                        fontWeight: 'bold',
+                        textShadow: value < 2 ? '0 0 3px black' : '0 0 3px white',
+                    }}
+                >
+                    {value}
+                </div>
+            </Html>
         </group>
     )
 }
@@ -206,27 +226,6 @@ const GLCMGeneral3D = () => {
                         </group>
                     </Suspense>
                 </Canvas>
-
-                {/* 2D Grid Labels Overlay */}
-                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none"
-                    style={{ width: '160px', height: '160px' }}>
-                    <div className="grid grid-cols-4 gap-0 w-full h-full">
-                        {grid.map((row, r) =>
-                            row.map((val, c) => (
-                                <div
-                                    key={`label-${r}-${c}`}
-                                    className="flex items-center justify-center text-xs font-bold"
-                                    style={{
-                                        color: val < 2 ? 'white' : 'black',
-                                        textShadow: '0 0 3px rgba(0,0,0,0.5)'
-                                    }}
-                                >
-                                    {val}
-                                </div>
-                            ))
-                        )}
-                    </div>
-                </div>
             </div>
         </div>
     )
